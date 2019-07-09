@@ -12,6 +12,7 @@ import App from './App.vue'
 
 //  初始化svg组件
 import './icons';
+require('./util/rem');
 
 filterInit(Vue);
 
