@@ -1,6 +1,14 @@
 import Vue from 'vue';
 import '@/assets/css/global.scss';
 
+//  导入验证码组件
+import VueInputCode from 'vue-input-code';
+Vue.component('VueInputCode', VueInputCode)
+
+//  导入倒计时组件
+import geCode from 'vue-gecode';
+Vue.component('geCode', geCode);
+
 //  获取service
 import service from '@/service';
 import store from '@/store'

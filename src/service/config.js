@@ -2,21 +2,15 @@ import axios from 'axios';
 
 let service = axios.create({
     headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'x-tianchi-client': '{"role":"ADVISER","version":"v1.1.1","deviceId":"1234fads"}'
     }
 });
 
-service.defaults.baseURL = process.env.VUE_APP_API_ROOT;
+service.defaults.baseURL = `${process.env.VUE_APP_API_ROOT}/api`;
 
 service.interceptors.request.use(
     config => {
-        let token = localStorage.getItem('token');
-        if (token) {
-            config.headers = {
-                'x-tianchi-token': token
-            }
-        }
-
         return config;
     },
     error => {

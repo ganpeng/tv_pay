@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill: #fff;
+        opacity: 0;
+      }
+
+      .cls-3 {
+        clip-path: url(#clip-path);
+      }
+
+      .cls-4 {
+        fill: #c2c2cc;
+      }
+    </style>
+    <clipPath id="clip-path">
+      <rect class="cls-1" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <g id="icon_delete" transform="translate(-343.242 -222.372)">
+    <rect id="bg" class="cls-2" width="21.372" height="21.372" transform="translate(344 224)"/>
+    <g id="icon_del" class="cls-3" transform="translate(343.242 222.372)">
+      <path id="icon_del-2" data-name="icon_del" class="cls-4" d="M7.4,16.391V9.956H1a1,1,0,1,1,0-2H7.4V1.42a1,1,0,0,1,2,0V7.956h6.57a1,1,0,1,1,0,2H9.4v6.435a1,1,0,1,1-2,0Z" transform="translate(12 0) rotate(45)"/>
+    </g>
+  </g>
+</svg>

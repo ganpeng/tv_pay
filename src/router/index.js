@@ -9,10 +9,15 @@ const routes = [
         name: 'Login',
         component: () => import('@/views/login/Login')
     },
+    // {
+    //     path: '/',
+    //     name: 'GetMessage',
+    //     component: () => import('@/views/GetMessage')
+    // },
     {
         path: '/',
-        name: 'GetMessage',
-        component: () => import('@/views/GetMessage')
+        name: 'InputMessage',
+        component: () => import('@/views/InputMessage')
     }
 ];
 

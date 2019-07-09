@@ -1,1 +1,6 @@
-export default Object.assign({});
+import * as common from './common';
+
+export default Object.assign(
+    {},
+    common
+);
