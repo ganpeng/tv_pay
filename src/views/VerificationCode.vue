@@ -1,7 +1,7 @@
 <template>
     <div class="input-message-container">
         <h3 class="input-message-title">输入验证码</h3>
-        <p class="message-send-prompt">验证码已发送至 <span class="phone-num">185 0019 7330</span></p>
+        <p class="message-send-prompt">验证码已发送至 <span class="phone-num">{{splitPhone}}</span></p>
         <div class="input-code-filed">
             <vue-input-code
                 span-size="20px"
@@ -16,28 +16,41 @@
                 :success="success">
             </vue-input-code>
         </div>
-        <p @click="getCodeHandler" :class="['resent-code', show && 'active']">
-            {{getCodeText}}
-        </p>
-        <message-box></message-box>
+        <div class="text-wrapper">
+            <p @click="getCodeHandler" :class="['resent-code', show && 'active']">
+                {{getCodeText}}
+            </p>
+            <span v-if="errorMessage" class="code-error">{{errorMessage}}</span>
+        </div>
+        <message-box ref="messageBox" :enterHandler="loginFailedHandler"></message-box>
+        <toast ref="toast"></toast>
     </div>
 </template>
 <script>
 import MessageBox from '../components/MessageBox';
+import Toast from '../components/Toast';
 export default {
-    name: 'InputMessage',
-    components: {MessageBox},
+    name: 'VerificationCode',
+    components: {MessageBox, Toast},
     data() {
         return {
+            //  验证码相关
             code: [],
+            phone: '',
+            errorMessage: '',
             //  倒计时相关
             timer: null,
             count: '',
             show: true
         };
     },
-    created() {
-        this.getCode();
+    async created() {
+        let {phone} = this.$route.params;
+        this.phone = phone || '';
+        if (localStorage.getItem('send')) {
+            localStorage.removeItem('send');
+            this.getCodeHandler();
+        }
     },
     computed: {
         getCodeText() {
@@ -46,18 +59,28 @@ export default {
             } else {
                 return `${this.count}s 后重新获取验证码`;
             }
+        },
+        splitPhone() {
+            return this.phone.replace(/(\d{3})(\d{0,4})/, '$1 $2 ');
         }
     },
     methods: {
-        getCodeHandler() {
-            if (this.show) {
-                this.getCode();
-                this.$service.getVerifyCode(15210069510);
+        async getCodeHandler() {
+            try {
+                if (this.show) {
+                    this.getCode();
+                    let res = await this.$service.getVerifyCode(this.phone);
+                    if (res && res.code !== 0) {
+                        this.errorMessage = res.message;
+                    }
+                }
+            } catch (err) {
+                console.log(err);
             }
         },
         getCode(){
             this.show = false;
-            const TIME_COUNT = 6;
+            const TIME_COUNT = 20;
             if (!this.timer) {
                 this.count = TIME_COUNT;
                 this.show = false;
@@ -77,6 +100,15 @@ export default {
         },
         success() {
             console.log('aaaa');
+        },
+        loginFailedHandler() {
+            this.$router.push({name: 'Phone'});
+        },
+        showMessageBoxHandler() {
+            this.$refs.messageBox.showHandler();
+        },
+        hideMessageBoxHandler() {
+            this.$refs.messageBox.hideHandler();
         }
     }
 };
@@ -97,13 +129,25 @@ export default {
         font-size: 16px;
         line-height: 16px;
     }
-    .resent-code {
-        color: #333;
-        font-size: 14px;
-        line-height: 14px;
+    .input-code-filed {
+        margin-top: 1rem;
+    }
+    .text-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-top: 1.3rem;
-        &.active {
-            color: #00ABFF;
+        .resent-code {
+            color: #333;
+            font-size: 14px;
+            line-height: 14px;
+            &.active {
+                color: #00ABFF;
+            }
+        }
+        .code-error {
+            color: #FD0000;
+            font-size: 14px;
         }
     }
 }

@@ -14,29 +14,37 @@
                 type="number"
                 placeholder="请输入手机号"
             >
-            <span v-if="!inputEmpty" class="clear-btn" @click="clearPhoneHandler">
+            <p v-if="phone !== '' && !phoneIsValid" class="error">手机号格式不正确</p>
+            <span v-if="phone.length > 0" class="clear-btn" @click="clearPhoneHandler">
                 <svg-icon class="delete-svg" icon-class="icon_delete"/>
             </span>
         </div>
-        <button :class="['get-code-btn', inputEmpty ? 'disabled' : '']">获取短信验证码</button>
+        <button @click="getCodeHandler" :class="['get-code-btn', !phoneIsValid && 'disabled']">获取短信验证码</button>
     </div>
 </template>
 <script>
 export default {
-    name: 'GetMessage',
+    name: 'Phone',
     data() {
         return {
             phone: ''
         };
     },
     computed: {
-        inputEmpty() {
-            return this.phone === '';
+        phoneIsValid() {
+            let reg = /^1[0-9]{10}$/;
+            return reg.test(this.phone);
         }
     },
     methods: {
         clearPhoneHandler() {
             this.phone = '';
+        },
+        getCodeHandler() {
+            if (this.phoneIsValid) {
+                localStorage.setItem('send', true);
+                this.$router.push({name: 'VerificationCode', params: {phone: this.phone}});
+            }
         }
     }
 }
@@ -93,6 +101,11 @@ export default {
             &::placeholder {
                 color: #C2C2CC;
             }
+        }
+        .error {
+            color: #FD0000;
+            font-size: 14px;
+            margin-top: 10px;
         }
         .clear-btn {
             position: absolute;

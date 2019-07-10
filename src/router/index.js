@@ -5,19 +5,39 @@ Vue.use(Router);
 
 const routes = [
     {
-        path: '/login',
-        name: 'Login',
-        component: () => import('@/views/login/Login')
-    },
-    // {
-    //     path: '/',
-    //     name: 'GetMessage',
-    //     component: () => import('@/views/GetMessage')
-    // },
-    {
         path: '/',
-        name: 'InputMessage',
-        component: () => import('@/views/InputMessage')
+        name: 'Index',
+        component: () => import('@/views/Index')
+    },
+    {
+        path: '/phone',
+        name: 'Phone',
+        component: () => import('@/views/Phone')
+    },
+    {
+        path: '/verification_code',
+        name: 'VerificationCode',
+        component: () => import('@/views/VerificationCode')
+    },
+    {
+        path: '/login_success',
+        name: 'LoginSuccess',
+        component: () => import('@/views/LoginSuccess')
+    },
+    {
+        path: '/payment_success',
+        name: 'PaymentSuccess',
+        component: () => import('@/views/PaymentSuccess')
+    },
+    {
+        path: '/bought_before',
+        name: 'BoughtBefore',
+        component: () => import('@/views/BoughtBefore')
+    },
+    {
+        path: '/pay',
+        name: 'Pay',
+        component: () => import('@/views/Pay')
     }
 ];
 

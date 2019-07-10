@@ -1,5 +1,5 @@
 <template>
-    <div class="message-box-container">
+    <div v-if="show" class="message-box-container">
         <div class="content">
             <h3 class="title">登录失败</h3>
             <p class="text">登录失败，请重试</p>
@@ -53,6 +53,7 @@ export default {
         z-index: 5;
         .title {
             font-size: 18px;
+            margin-top: 0.8rem;
         }
         .text {
             font-size: 16px;
