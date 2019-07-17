@@ -15,6 +15,11 @@ const routes = [
         component: () => import('@/views/Phone')
     },
     {
+        path: '/openid',
+        name: 'OpenId',
+        component: () => import('@/views/OpenId')
+    },
+    {
         path: '/verification_code',
         name: 'VerificationCode',
         component: () => import('@/views/VerificationCode')

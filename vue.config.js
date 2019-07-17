@@ -31,5 +31,8 @@ module.exports = {
         config.module
             .rule('images')
             .test(/\.(png|jpe?g|gif|svg)(\?.*)?$/);
+    },
+    devServer: {
+        disableHostCheck: true
     }
 }

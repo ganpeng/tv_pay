@@ -22,6 +22,9 @@ export default {
     methods: {
         showHandler() {
             this.show = true;
+            setTimeout(() => {
+                this.show = false;
+            }, 3000);
         },
         hideHandler() {
             this.show = false;
@@ -32,7 +35,7 @@ export default {
 <style lang="scss" scoped>
 .toast {
     position: fixed;
-    top: 50%;
+    bottom: 10%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 7.4rem;
@@ -43,6 +46,7 @@ export default {
     text-align: center;
     background-color: rgba(0, 0, 0, 0.8);
     border-radius: 24px;
+    z-index: 1000;
 }
 
 

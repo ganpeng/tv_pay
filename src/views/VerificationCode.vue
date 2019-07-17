@@ -9,7 +9,7 @@
                 :number="4"
                 height="50px"
                 span-color="#000"
-                input-color="#3498db"
+                input-color="#000"
                 input-size="24px"
                 :code="code"
                 :get-input="getInput"
@@ -23,10 +23,11 @@
             <span v-if="errorMessage" class="code-error">{{errorMessage}}</span>
         </div>
         <message-box ref="messageBox" :enterHandler="loginFailedHandler"></message-box>
-        <toast ref="toast"></toast>
+        <toast ref="toast" :text="text"></toast>
     </div>
 </template>
 <script>
+import _ from 'lodash';
 import MessageBox from '../components/MessageBox';
 import Toast from '../components/Toast';
 export default {
@@ -41,11 +42,22 @@ export default {
             //  倒计时相关
             timer: null,
             count: '',
-            show: true
+            show: true,
+            //  加载圆圈
+            loading: null,
+            //  Toast文字
+            text: ''
         };
     },
+    beforeRouteEnter(to, from, next) {
+        if (from.name !== 'Phone') {
+            next(vm => { vm.$router.replace('Phone'); });
+        } else {
+            next();
+        }
+    },
     async created() {
-        let {phone} = this.$route.params;
+        let {phone} = this.$route.query;
         this.phone = phone || '';
         if (localStorage.getItem('send')) {
             localStorage.removeItem('send');
@@ -69,7 +81,11 @@ export default {
             try {
                 if (this.show) {
                     this.getCode();
-                    let res = await this.$service.getVerifyCode(this.phone);
+                    this.errorMessage = '';
+                    console.log('获取验证码的请求开始了');
+                    let response = await this.$service.getVerifyCode(this.phone);
+                    let res = await response.json();
+                    console.log('获取验证码的请求结束了');
                     if (res && res.code !== 0) {
                         this.errorMessage = res.message;
                     }
@@ -80,7 +96,7 @@ export default {
         },
         getCode(){
             this.show = false;
-            const TIME_COUNT = 20;
+            const TIME_COUNT = 60;
             if (!this.timer) {
                 this.count = TIME_COUNT;
                 this.show = false;
@@ -95,20 +111,116 @@ export default {
                 }, 1000)
             }
         },
-        getInput() {
+        getInput() {},
+        async success() {
+            try {
+                let option = JSON.parse(localStorage.getItem('queryString'));
+                let mobile = this.phone;
+                let smsCode = this.code.join('');
+                let uuid = _.get(option, 'uuid');
+                let status = _.get(option, 'status');
 
+                if (mobile) {
+                    if (status === 2) {
+                        this.loginAndPay(mobile, smsCode, uuid);
+                    }
+
+                    if (status === 3) {
+                        this.login(mobile, smsCode, uuid);
+                    }
+                } else {
+                    this.text = '手机号不能为空';
+                    this.$refs.toast.showHandler();
+                }
+            } catch (err) {
+                console.log(err);
+            }
         },
-        success() {
-            console.log('aaaa');
+        async login(mobile, smsCode, uuid) {
+            try {
+                this.loading = this.$loading.show();
+                console.log('登录的请求开始了');
+                let response = await this.$service.loginTVApp({mobile, smsCode, uuid});
+                let res = await response.json();
+                console.log('登录的请求结束了');
+                if (res && res.code === 0) {
+                    this.$router.replace({name: 'LoginSuccess'});
+                } else {
+                    this.text = res.message;
+                    this.$refs.toast.showHandler();
+                }
+            } catch (err) {
+                console.log(err);
+            }  finally {
+                this.loading.hide();
+            }
+        },
+        async loginAndPay(mobile, smsCode, uuid) {
+            try {
+                this.loading = this.$loading.show();
+                let loginResponse = await this.$service.loginTVApp({mobile, smsCode, uuid});
+                let res = await loginResponse.json();
+                console.log('先登录再支付的响应');
+                if (res && res.code === 0) {
+                    let payResponse = await this.payHandler();
+                    console.log(payResponse);
+                    // let payRes = await this.pay();
+                    // if (payRes === 'success') {
+                    //     this.$router.push({name: 'PaymentSuccess'});
+                    // } else {
+                    //     this.text = '该商品已经买过了';
+                    //     this.$refs.toast.showHandler();
+                    //     this.$router.push({name: 'BoughtBefore'});
+                    // }
+                } else {
+                    this.text = res.message;
+                    this.$refs.toast.showHandler();
+                }
+            } catch (err) {
+                console.log(err);
+            } finally {
+                this.loading.hide();
+            }
+        },
+        pay() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve('success');
+                }, 3000);
+            });
         },
         loginFailedHandler() {
-            this.$router.push({name: 'Phone'});
+            this.$router.replace({name: 'Phone'});
         },
         showMessageBoxHandler() {
             this.$refs.messageBox.showHandler();
         },
-        hideMessageBoxHandler() {
-            this.$refs.messageBox.hideHandler();
+        payHandler() {
+            let config = {
+                "appId":"wx2421b1c4370ec43b",     //公众号名称，由商户传入
+                "timeStamp":"1395712654",         //时间戳，自1970年以来的秒数
+                "nonceStr":"e61463f8efa94090b1f366cccfbbb444", //随机串
+                "package":"prepay_id=u802345jgfjsdfgsdg888",
+                "signType":"MD5",         //微信签名方式：
+                "paySign":"70EA570631E4BB79628FBCA90534C63FF7FADD89" //微信签名
+            };
+
+            function onBridgeReady() {
+                return new Promise((resolve) => {
+                    WeixinJSBridge.invoke('getBrandWCPayRequest', config, res => resolve(res));
+                });
+            }
+
+            if (typeof WeixinJSBridge == "undefined"){
+                if( document.addEventListener ){
+                    document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
+                }else if (document.attachEvent){
+                    document.attachEvent('WeixinJSBridgeReady', onBridgeReady);
+                    document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
+                }
+            }else{
+                onBridgeReady();
+            }
         }
     }
 };
@@ -156,6 +268,7 @@ export default {
 .vue_input_code .input > span {
     border: none;
     border-bottom: 1px solid #000;
+    font-weight: normal;
     & + span {
         margin-left: 0.4rem;
     }
@@ -166,6 +279,11 @@ export default {
 }
 .vue_input_code .input > span.first {
     border-radius: 0;
+}
+
+.vue_input_code .input > div input {
+    caret-color: #00ABFF;
+    font-size: 0.72rem!important;
 }
 </style>
 

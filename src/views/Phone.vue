@@ -14,10 +14,12 @@
                 type="number"
                 placeholder="请输入手机号"
             >
-            <p v-if="phone !== '' && !phoneIsValid" class="error">手机号格式不正确</p>
             <span v-if="phone.length > 0" class="clear-btn" @click="clearPhoneHandler">
                 <svg-icon class="delete-svg" icon-class="icon_delete"/>
             </span>
+        </div>
+        <div class="error-container">
+            <p v-show="phone !== '' && !phoneIsValid" class="error">手机号格式不正确</p>
         </div>
         <button @click="getCodeHandler" :class="['get-code-btn', !phoneIsValid && 'disabled']">获取短信验证码</button>
     </div>
@@ -34,8 +36,9 @@ export default {
         phoneIsValid() {
             let reg = /^1[0-9]{10}$/;
             return reg.test(this.phone);
-        }
+        },
     },
+    created() {},
     methods: {
         clearPhoneHandler() {
             this.phone = '';
@@ -43,7 +46,7 @@ export default {
         getCodeHandler() {
             if (this.phoneIsValid) {
                 localStorage.setItem('send', true);
-                this.$router.push({name: 'VerificationCode', params: {phone: this.phone}});
+                this.$router.push({name: 'VerificationCode', query: {phone: this.phone}});
             }
         }
     }
@@ -92,20 +95,20 @@ export default {
         .phone-input {
             font-size: 0.72rem;
             width: 100%;
-            height: 2.34rem;
-            line-height: 2.34rem;
+            height: 0.72rem;
+            line-height: 0.72rem;
+            padding: 0.8rem 0;
             color: #000;
-            outline: none;
-            border: none;
+            caret-color: #00ABFF;
+            outline: none!important;
+            border-left: none!important;
+            border-top: none!important;
+            border-right: none!important;
+            border-radius: 0!important;
             border-bottom: 1px solid #C2C2CC;
             &::placeholder {
                 color: #C2C2CC;
             }
-        }
-        .error {
-            color: #FD0000;
-            font-size: 14px;
-            margin-top: 10px;
         }
         .clear-btn {
             position: absolute;
@@ -116,6 +119,18 @@ export default {
                 width: 1rem;
                 height: 1rem;
             }
+        }
+    }
+
+    .error-container {
+        height: 14px;
+        line-height: 14px;
+        margin-top: 10px;
+        .error {
+            color: #FD0000;
+            font-size: 14px;
+            height: 14px;
+            line-height: 14px;
         }
     }
 
@@ -132,7 +147,8 @@ export default {
         border: none;
         margin-top: 2.2rem;
         &.disabled {
-            color: #C2C2CC;
+            // color: #C2C2CC;
+            color: #fff;
             opacity: 0.5;
         }
     }

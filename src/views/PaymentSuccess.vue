@@ -1,6 +1,6 @@
 <template>
     <div class="payment-success-container">
-        <svg-icon class-name="payment-success-svg" icon-class="paid"/>
+        <img class="payment-success-img" src="../assets/img/paid@2x.png" alt="">
         <svg-icon class-name="logobtm-svg" icon-class="logobtm"/>
     </div>
 </template>
@@ -11,13 +11,13 @@ export default {
 </script>
 <style lang="scss" scoped>
 .payment-success-container {
-    .payment-success-svg {
+    .payment-success-img {
         position: absolute;
-        top: 50%;
+        top: 40%;
         left: 50%;
         transform: translate(-50%, -50%);
         width: 100%;
-        height: 8.2rem;
+        height: auto;
     }
     .logobtm-svg {
         position: absolute;
