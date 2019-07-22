@@ -1,15 +1,22 @@
 <template>
     <div class="index-container">
-        <svg-icon v-if="!error" class-name="loading-svg" icon-class="loading"/>
-        <span class="error-message" v-else>{{error}}</span>
+        <!-- <svg-icon v-if="!error" class-name="loading-svg" icon-class="loading"/> -->
+        <span v-if="error" class="error-message">{{error}}</span>
+        <message-box ref="messageBox" :enterHandler="loginFailedHandler"></message-box>
+        <toast ref="toast" :text="text"></toast>
     </div>
 </template>
 <script>
+import MessageBox from '../components/MessageBox';
+import Toast from '../components/Toast';
 export default {
     name: 'Index',
+    components: {MessageBox, Toast},
     data() {
         return {
-            error: ''
+            error: '',
+            loading: null,
+            text: ''
         };
     },
     async created() {
@@ -34,7 +41,7 @@ export default {
                     this.getOpenId();
                     return false;
                 } else {
-                    alert('直接支付');
+                    this.submitOrder();
                     return false;
                 }
             }
@@ -50,7 +57,7 @@ export default {
                     this.getOpenId();
                     return false;
                 } else {
-                    this.$router.push({name: 'Phone'});
+                    this.$router.replace({name: 'Phone'});
                 }
             }
 
@@ -60,10 +67,9 @@ export default {
                 let option = {status: 3, uuid, token, type, id};
                 let queryString = JSON.stringify(option);
                 localStorage.setItem('queryString', queryString);
-                this.$router.push({name: 'Phone'});
+                this.$router.replace({name: 'Phone'});
                 return false;
             }
-
             this.error = '请使用扫码方式访问';
         } catch (err) {
             console.log(err);
@@ -72,7 +78,53 @@ export default {
     methods: {
         getOpenId() {
             let returnUrl = `${process.env.VUE_APP_ROOT}/openid`
-            location.href = `${process.env.VUE_APP_ORDER_API_ROOT}/v1/trade/order/wxpay/getUserCode?returnUrl=${encodeURIComponent(returnUrl)}`;
+            location.replace(`${process.env.VUE_APP_ORDER_API_ROOT}/v1/trade/order/wxpay/getUserCode?returnUrl=${encodeURIComponent(returnUrl)}`);
+        },
+        async submitOrder() {
+            try {
+                this.loading = this.$loading.show();
+                let {token, type, id} = this.$route.query;
+                let openId = localStorage.getItem('openid');
+                let orderResponse = await this.$service.submitOrder({openId, token, type, productId: id});
+                let orderRes = await orderResponse.json();
+                if (orderRes && orderRes.code === 0) {
+                    this.payHandler(orderRes.data);
+                } else {
+                    this.text= orderRes.message;
+                    this.$refs.toast.showHandler();
+                    // this.$router.replace({name: 'BoughtBefore'});
+                }
+            } catch (err) {
+                console.log(err);
+            } finally {
+                this.loading.hide();
+            }
+        },
+        payHandler(config) {
+            let that = this;
+            function onBridgeReady() {
+                WeixinJSBridge.invoke('getBrandWCPayRequest', config, res => {
+                    if (res.err_msg === 'get_brand_wcpay_request:ok') {
+                        that.$router.replace({name: 'PaymentSuccess'});
+                    } else {
+                        console.log('支付失败');
+                    }
+                });
+            }
+
+            if (typeof WeixinJSBridge == "undefined"){
+                if( document.addEventListener ){
+                    document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
+                }else if (document.attachEvent){
+                    document.attachEvent('WeixinJSBridgeReady', onBridgeReady);
+                    document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
+                }
+            }else{
+                onBridgeReady();
+            }
+        },
+        loginFailedHandler() {
+            this.$router.replace({name: 'Phone'});
         }
     }
 }

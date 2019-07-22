@@ -160,18 +160,23 @@ export default {
                 this.loading = this.$loading.show();
                 let loginResponse = await this.$service.loginTVApp({mobile, smsCode, uuid});
                 let res = await loginResponse.json();
-                console.log('先登录再支付的响应');
                 if (res && res.code === 0) {
-                    let payResponse = await this.payHandler();
-                    console.log(payResponse);
-                    // let payRes = await this.pay();
-                    // if (payRes === 'success') {
-                    //     this.$router.push({name: 'PaymentSuccess'});
-                    // } else {
-                    //     this.text = '该商品已经买过了';
-                    //     this.$refs.toast.showHandler();
-                    //     this.$router.push({name: 'BoughtBefore'});
-                    // }
+                    let token = res.data.token;
+                    let openId = localStorage.getItem('openid');
+                    let option = JSON.parse(localStorage.getItem('queryString'));
+                    let {type, id, uuid} = option;
+                    let orderResponse = await this.$service.submitOrder({openId, type, productId: id, uuid, token});
+                    let orderRes = await orderResponse.json();
+                    if (orderRes && orderRes.code === 0) {
+                        let payResponse = await this.payHandler(orderRes.data);
+                        if (payResponse.err_msg == "get_brand_wcpay_request:ok") {
+                            this.$router.replace({name: 'PaymentSuccess'});
+                        }
+                    } else {
+                        this.text= orderRes.message;
+                        this.$refs.toast.showHandler();
+                        // this.$router.replace({name: 'BoughtBefore'});
+                    }
                 } else {
                     this.text = res.message;
                     this.$refs.toast.showHandler();
@@ -195,19 +200,17 @@ export default {
         showMessageBoxHandler() {
             this.$refs.messageBox.showHandler();
         },
-        payHandler() {
-            let config = {
-                "appId":"wx2421b1c4370ec43b",     //公众号名称，由商户传入
-                "timeStamp":"1395712654",         //时间戳，自1970年以来的秒数
-                "nonceStr":"e61463f8efa94090b1f366cccfbbb444", //随机串
-                "package":"prepay_id=u802345jgfjsdfgsdg888",
-                "signType":"MD5",         //微信签名方式：
-                "paySign":"70EA570631E4BB79628FBCA90534C63FF7FADD89" //微信签名
-            };
-
+        payHandler(config) {
             function onBridgeReady() {
                 return new Promise((resolve) => {
-                    WeixinJSBridge.invoke('getBrandWCPayRequest', config, res => resolve(res));
+                    WeixinJSBridge.invoke('getBrandWCPayRequest', {
+                        appId: config.appId,
+                        timeStamp: config.timeStamp,
+                        nonceStr: config.nonceStr,
+                        package: config.package,
+                        signType: config.signType,
+                        paySign: config.paySign
+                    }, res => resolve(res));
                 });
             }
 
@@ -219,7 +222,7 @@ export default {
                     document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
                 }
             }else{
-                onBridgeReady();
+                return onBridgeReady();
             }
         }
     }
